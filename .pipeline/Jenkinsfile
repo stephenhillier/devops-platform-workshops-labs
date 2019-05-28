@@ -11,11 +11,11 @@ node {
     stage ('Deploy Loki to dev'){
         dir ('simple_pipeline') {
             checkout scm
-            sh "oc process -f templates/loki_template.yaml -p  LOKI_SERVICE_NAME=${LOKI_SERVICE}-${BUILD_ID} | oc apply -f - -n ${DEV_NAMESPACE}"
+            sh "oc process -f templates/loki_template.yaml -p  LOKI_SERVICE_NAME=${LOKI_SERVICE} | oc apply -f - -n ${DEV_NAMESPACE}"
             timeout (time: 180, unit: 'SECONDS'){
                 openshift.withCluster() {
                     openshift.withProject("${DEV_NAMESPACE}") {
-                        def dc = openshift.selector('deployment', "${LOKI_SERVICE}-${BUILD_ID}")
+                        def dc = openshift.selector('deployment', "${LOKI_SERVICE}")
                         dc.rollout().status()
                     }
                 }
