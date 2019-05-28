@@ -15,7 +15,7 @@ node {
             timeout (time: 180, unit: 'SECONDS'){
                 openshift.withCluster() {
                     openshift.withProject("${DEV_NAMESPACE}") {
-                        def dc = openshift.selector('deployment', "${LOKI_SERVICE}")
+                        def dc = openshift.selector('deployment', "${LOKI_SERVICE}-${BUILD_ID}")
                         dc.rollout().status()
                     }
                 }
