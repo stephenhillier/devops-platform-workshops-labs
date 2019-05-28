@@ -1,0 +1,551 @@
+---
+# Source: brigade/charts/kashti/templates/js-configmap.yaml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sth-brigade-kashti-js
+  labels:
+    app: brigade
+    chart: kashti-0.1.1
+    release: "sth-brigade"
+    heritage: Tiller
+data:
+  "settings.js": |-
+    var brigadeApiURL = '//' + location.host; 'http://sth-brigade-brigade-api:7745';
+    // End
+
+---
+# Source: brigade/charts/kashti/templates/nginx-configmap.yaml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sth-brigade-kashti-nginx
+  labels:
+    app: brigade
+    chart: kashti-0.1.1
+    release: "sth-brigade"
+    heritage: Tiller
+data:
+  "default.conf": |-
+      server {
+          listen       80;
+          server_name  localhost;
+
+          # Proxy to API server
+          location /v1/ {
+              proxy_pass http://sth-brigade-brigade-api:7745/v1/;
+          }
+
+          location / {
+              root   /usr/share/nginx/html;
+              index  index.html index.htm;
+              try_files $uri $uri/ /index.html;
+          }
+          
+          error_page   500 502 503 504  /50x.html;
+          location = /50x.html {
+              root   /usr/share/nginx/html;
+          }
+      }
+
+---
+# Source: brigade/templates/api-role.yaml
+
+
+
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sth-brigade-brigade-api
+  labels:
+    app: brigade
+    app.kubernetes.io/name: sth-brigade-brigade
+    helm.sh/chart: "brigade-1.0.0"
+    app.kubernetes.io/instance: "sth-brigade"
+    app.kubernetes.io/managed-by: "Tiller"
+
+
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: sth-brigade-brigade-api
+  labels:
+    app: brigade
+    app.kubernetes.io/name: sth-brigade-brigade
+    helm.sh/chart: "brigade-1.0.0"
+    app.kubernetes.io/instance: "sth-brigade"
+    app.kubernetes.io/managed-by: "Tiller"
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods", "secrets", "pods/log"]
+  verbs: ["get", "list", "watch"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: sth-brigade-brigade-api
+  labels:
+    app: brigade
+    app.kubernetes.io/name: sth-brigade-brigade
+    helm.sh/chart: "brigade-1.0.0"
+    app.kubernetes.io/instance: "sth-brigade"
+    app.kubernetes.io/managed-by: "Tiller"
+subjects:
+- kind: ServiceAccount
+  name: sth-brigade-brigade-api
+roleRef:
+  kind: Role
+  name: sth-brigade-brigade-api
+  apiGroup: rbac.authorization.k8s.io
+
+
+
+---
+# Source: brigade/templates/controller-role.yaml
+
+
+
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sth-brigade-brigade-ctrl
+  labels:
+    app: brigade
+    app.kubernetes.io/name: sth-brigade-brigade
+    helm.sh/chart: "brigade-1.0.0"
+    app.kubernetes.io/instance: "sth-brigade"
+    app.kubernetes.io/managed-by: "Tiller"
+
+
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: sth-brigade-brigade-ctrl
+  labels:
+    app: brigade
+    app.kubernetes.io/name: sth-brigade-brigade
+    helm.sh/chart: "brigade-1.0.0"
+    app.kubernetes.io/instance: "sth-brigade"
+    app.kubernetes.io/managed-by: "Tiller"
+rules:
+- apiGroups: [""]
+  resources: ["pods", "secrets", "configmaps"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: sth-brigade-brigade-ctrl
+  labels:
+    app: brigade
+    app.kubernetes.io/name: sth-brigade-brigade
+    helm.sh/chart: "brigade-1.0.0"
+    app.kubernetes.io/instance: "sth-brigade"
+    app.kubernetes.io/managed-by: "Tiller"
+subjects:
+- kind: ServiceAccount
+  name: sth-brigade-brigade-ctrl
+roleRef:
+  kind: Role
+  name: sth-brigade-brigade-ctrl
+  apiGroup: rbac.authorization.k8s.io
+
+
+
+---
+# Source: brigade/templates/vacuum-role.yaml
+
+
+
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: brigade-vacuum
+  labels:
+    app: brigade
+    app.kubernetes.io/name: sth-brigade-brigade
+    helm.sh/chart: "brigade-1.0.0"
+    app.kubernetes.io/instance: "sth-brigade"
+    app.kubernetes.io/managed-by: "Tiller"
+
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: sth-brigade-brigade-vacuum
+  labels:
+    app: brigade
+    app.kubernetes.io/name: sth-brigade-brigade
+    helm.sh/chart: "brigade-1.0.0"
+    app.kubernetes.io/instance: "sth-brigade"
+    app.kubernetes.io/managed-by: "Tiller"
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods", "secrets", "persistentvolumeclaims"]
+  verbs: ["get", "list", "watch", "delete"]
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods/log"]
+  verbs: ["get", "list", "watch"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: sth-brigade-brigade-vacuum
+  labels:
+    app: brigade
+    app.kubernetes.io/name: sth-brigade-brigade
+    helm.sh/chart: "brigade-1.0.0"
+    app.kubernetes.io/instance: "sth-brigade"
+    app.kubernetes.io/managed-by: "Tiller"
+subjects:
+- kind: ServiceAccount
+  name: brigade-vacuum
+roleRef:
+  kind: Role
+  name: sth-brigade-brigade-vacuum
+  apiGroup: rbac.authorization.k8s.io
+
+
+
+
+---
+# Source: brigade/templates/worker-role.yaml
+
+
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: brigade-worker
+  labels:
+    app: brigade
+    app.kubernetes.io/name: sth-brigade-brigade
+    helm.sh/chart: "brigade-1.0.0"
+    app.kubernetes.io/instance: "sth-brigade"
+    app.kubernetes.io/managed-by: "Tiller"
+
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: sth-brigade-brigade-wrk
+  labels:
+    app: brigade
+    app.kubernetes.io/name: sth-brigade-brigade
+    helm.sh/chart: "brigade-1.0.0"
+    app.kubernetes.io/instance: "sth-brigade"
+    app.kubernetes.io/managed-by: "Tiller"
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods", "secrets", "persistentvolumeclaims", "configmaps"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods/log"]
+  verbs: ["get", "list", "watch"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: sth-brigade-brigade-wrk
+  labels:
+    app: brigade
+    app.kubernetes.io/name: sth-brigade-brigade
+    helm.sh/chart: "brigade-1.0.0"
+    app.kubernetes.io/instance: "sth-brigade"
+    app.kubernetes.io/managed-by: "Tiller"
+subjects:
+- kind: ServiceAccount
+  name: brigade-worker
+roleRef:
+  kind: Role
+  name: sth-brigade-brigade-wrk
+  apiGroup: rbac.authorization.k8s.io
+
+
+
+---
+# Source: brigade/charts/kashti/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: sth-brigade-kashti
+  labels:
+    app: kashti
+    chart: kashti-0.1.1
+    release: sth-brigade
+    heritage: Tiller
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: kashti
+  selector:
+    app: kashti
+    release: sth-brigade
+
+---
+# Source: brigade/templates/api-service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: sth-brigade-brigade-api
+  labels:
+    app: brigade
+    helm.sh/chart: "brigade-1.0.0"
+    app.kubernetes.io/instance: "sth-brigade"
+    app.kubernetes.io/managed-by: "Tiller"
+    role: api
+spec:
+  type: ClusterIP
+  ports:
+  - port: 7745
+    targetPort: 7745
+    protocol: TCP
+    name: brigade-api
+  selector:
+    app.kubernetes.io/name: sth-brigade-brigade-api
+
+
+---
+# Source: brigade/charts/kashti/templates/deployment.yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: sth-brigade-kashti
+  labels:
+    app: kashti
+    chart: kashti-0.1.1
+    release: sth-brigade
+    heritage: Tiller
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        checksum/config-js: 641ac3be141c62b8700439294e72a73b568f89a7a04afb9c6e98d2315aae167f
+        checksum/config-nginx: 45f992c9589677d23a467cd38033e32bf8e8f4f54a0aeb81211b32fdf5ad643f
+      labels:
+        app: kashti
+        release: sth-brigade
+    spec:
+      containers:
+        - name: kashti
+          image: "brigadecore/kashti:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+          volumeMounts:
+            - name: config-js
+              mountPath: /usr/share/nginx/html/assets/js/settings
+            - name: config-nginx
+              mountPath: /etc/nginx/conf.d
+          resources:
+            {}
+            
+      volumes:
+        - name: config-js
+          configMap:
+            name: sth-brigade-kashti-js
+        - name: config-nginx
+          configMap:
+            name: sth-brigade-kashti-nginx
+
+---
+# Source: brigade/templates/api-deployment.yaml
+
+
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: sth-brigade-brigade-api
+  labels:
+    app: brigade
+    app.kubernetes.io/name: sth-brigade-brigade-api
+    helm.sh/chart: "brigade-1.0.0"
+    app.kubernetes.io/instance: "sth-brigade"
+    app.kubernetes.io/managed-by: "Tiller"
+    role: api
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sth-brigade-brigade-api
+        app: sth-brigade-brigade-api
+        role: api
+    spec:
+      serviceAccountName: sth-brigade-brigade-api
+      containers:
+      - name: brigade
+        image: "brigadecore/brigade-api:v1.0.0"
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 7745
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 7745
+
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 7745
+
+        env:
+          - name: BRIGADE_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: BRIGADE_API_PORT
+            value: "7745"
+      
+
+
+---
+# Source: brigade/templates/controller-deployment.yaml
+
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: sth-brigade-brigade-ctrl
+  labels:
+    app: brigade
+    app.kubernetes.io/name: sth-brigade-brigade-ctrl
+    helm.sh/chart: "brigade-1.0.0"
+    app.kubernetes.io/instance: "sth-brigade"
+    app.kubernetes.io/managed-by: "Tiller"
+    role: controller
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sth-brigade-brigade-ctrl
+        app: sth-brigade-brigade-ctrl
+        role: controller
+    spec:
+      serviceAccountName: sth-brigade-brigade-ctrl
+      containers:
+      - name: brigade
+        image: "brigadecore/brigade-controller:v1.0.0"
+        imagePullPolicy: IfNotPresent
+        command:
+        - /usr/bin/brigade-controller
+        
+        env:
+          - name: BRIGADE_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: BRIGADE_WORKER_IMAGE
+            value: "brigadecore/brigade-worker:v1.0.0"
+          - name: BRIGADE_WORKER_PULL_POLICY
+            value: IfNotPresent
+          - name: BRIGADE_WORKER_SERVICE_ACCOUNT
+            value: brigade-worker
+      
+
+
+---
+# Source: brigade/templates/vacuum-cronjob.yaml
+
+
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: sth-brigade-brigade-vacuum
+  labels:
+    app: brigade
+    app.kubernetes.io/name: sth-brigade-brigade
+    helm.sh/chart: "brigade-1.0.0"
+    app.kubernetes.io/instance: "sth-brigade"
+    app.kubernetes.io/managed-by: "Tiller"
+    role: vacuum
+spec:
+  schedule: "@hourly"
+  successfulJobsHistoryLimit: 10
+  failedJobsHistoryLimit: 10
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: sth-brigade-brigade
+            role: vacuum
+        spec:
+          serviceAccountName: brigade-vacuum
+          containers:
+          - name: brigade-vacuum
+            image: "brigadecore/brigade-vacuum:v1.0.0"
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: VACUUM_AGE
+              value: "720h"
+            - name: VACUUM_MAX_BUILDS
+              value: "-1"
+            - name: VACUUM_SKIP_RUNNING_BUILDS
+              value: "false"
+            - name: BRIGADE_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          restartPolicy: OnFailure
+
+
+---
+# Source: brigade/charts/kashti/templates/ingress.yaml
+
+---
+# Source: brigade/templates/api-ingress.yaml
+
+---
+# Source: brigade/templates/gateway-cr-deployment.yaml
+
+
+---
+# Source: brigade/templates/gateway-cr-role.yaml
+
+
+---
+# Source: brigade/templates/gateway-cr-service.yaml
+
+
+---
+# Source: brigade/templates/gateway-generic-deployment.yaml
+
+
+---
+# Source: brigade/templates/gateway-generic-ingress.yaml
+
+---
+# Source: brigade/templates/gateway-generic-role.yaml
+
+
+---
+# Source: brigade/templates/gateway-generic-service.yaml
+
+
