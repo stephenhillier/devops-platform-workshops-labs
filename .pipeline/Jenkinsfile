@@ -12,7 +12,7 @@ node {
                 dir ('simple_pipeline') {
                     checkout scm
                     sh "echo HELLO WORLD! "
-                    sh "ls -lha openshift201/templates"
+                    sh "ls -lha templates"
                 }
             }
     }
