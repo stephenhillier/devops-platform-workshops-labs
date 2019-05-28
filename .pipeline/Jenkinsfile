@@ -12,7 +12,7 @@ node {
                 dir ('simple_pipeline') {
                     checkout scm
                     sh "echo HELLO WORLD! "
-                    sh "ls -lha templates"
+                    sh "oc get projects"
                 }
             }
     }
