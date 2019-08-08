@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    config: '{"postgresql":{"use_pg_rewind":true,"parameters":{"max_connections":101,"max_prepared_transactions":0,"max_locks_per_transaction":64}}}'
+  creationTimestamp: null
+  labels:
+    app.kubernetes.io/name: patroni
+    cluster-name: patroni
+  name: patroni-config
